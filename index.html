@@ -794,7 +794,8 @@ function updateBoardSizeSlider(value) {
                                 spAttack: data.stats[3].base_stat,
                                 spDefense: data.stats[4].base_stat,
                                 speed: data.stats[5].base_stat
-                            }
+                            },
+                            sound: data.cries.latest
                         };
                         pokemonDetails[id] = pokemon;
                         return pokemon;
@@ -873,7 +874,7 @@ function updateBoardSizeSlider(value) {
                     ${currentBoard.map(p => `
                         <div class="pokemon-card ${eliminatedPokemon.has(p.id) ? 'eliminated' : ''} ${selectedMyPokemon === p.id ? 'selected' : ''}" 
                              onclick="toggleEliminate(${p.id}, event)"
-                             oncontextmenu="selectMyPokemon(${p.id}, event)"
+                             oncontextmenu="selectMyPokemon(${p.id}, event, '${p.sound}')"
                              onmouseenter="showTooltip(event, ${p.id})"
                              onmouseleave="hideTooltip()">
                             <img src="${p.sprite}" alt="${p.name}">
@@ -909,12 +910,15 @@ function updateBoardSizeSlider(value) {
             applyFilterEliminations();
         }
 
-        function selectMyPokemon(pokemonId, event) {
+        function selectMyPokemon(pokemonId, event, ogg) {
             event.preventDefault();
             if (selectedMyPokemon === pokemonId) {
                 selectedMyPokemon = null;
             } else {
                 selectedMyPokemon = pokemonId;
+                cry = new Audio(ogg);
+                cry.volume = 0.1;
+                cry.play();
             }
             renderBoard();
         }
