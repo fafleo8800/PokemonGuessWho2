@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Guess Who</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 280px;
+            gap: 20px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #1e1e1e;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        .panel h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .filter-section {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-section h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #f5f5f5;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .filter-button {
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .filter-button:hover {
+            transform: scale(1.05);
+        }
+
+        .filter-button.inactive {
+            filter: grayscale(100%);
+            opacity: 0.4;
+        }
+
+        .gen-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .gen-button {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            background: #e63946;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .gen-button:hover {
+            transform: scale(1.05);
+        }
+
+        .gen-button.inactive {
+            filter: grayscale(100%);
+            opacity: 0.4;
+        }
+
+        .option-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .option-button {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            background: #e63946;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .option-button:hover {
+            transform: scale(1.02);
+        }
+
+        .option-button.inactive {
+            filter: grayscale(100%);
+            opacity: 0.4;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #2a2a2a;
+            color: #f5f5f5;
+            font-size: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: #e63946;
+            color: white;
+            width: 100%;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.03);
+            background: #d62839;
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+        }
+
+        .code-display {
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .code-display code {
+            flex: 1;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #f5f5f5;
+        }
+
+        .copy-btn {
+            background: #e63946;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .copy-btn.copied {
+            background: #333;
+        }
+
+        .board-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 15px;
+        }
+
+        .pokemon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            justify-content: center;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .pokemon-card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 8px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s;
+        }
+
+        .pokemon-card:hover:not(.eliminated) {
+            transform: translateY(-3px);
+        }
+
+        .pokemon-card.eliminated {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+
+        .pokemon-card.selected {
+            outline: 4px solid #e63946;
+            outline-offset: 2px;
+            box-shadow: 0 0 20px rgba(230, 57, 70, 0.6);
+        }
+
+        .pokemon-card img {
+            width: 100%;
+            height: auto;
+        }
+
+        .pokemon-card p {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: capitalize;
+            margin-top: 5px;
+            color: #f5f5f5;
+        }
+
+        .type-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .type-box {
+            padding: 3px 6px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .eliminated-x {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #e63946;
+            font-weight: bold;
+        }
+
+        .pokemon-tooltip {
+            position: fixed;
+            background: #1e1e1e;
+            border: 3px solid #e63946;
+            border-radius: 15px;
+            padding: 15px;
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pokemon-tooltip img {
+            width: 300px;
+            height: 300px;
+            object-fit: contain;
+        }
+
+        .pokemon-tooltip h4 {
+            color: #f5f5f5;
+            font-size: 1.3rem;
+            text-transform: capitalize;
+            margin: 0;
+        }
+
+        .pokemon-tooltip .gen-label {
+            color: #e63946;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .board-stats {
+            text-align: center;
+            padding: 10px;
+            color: #e0e0e0;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #e63946;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                max-width: 100%;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="main-grid">
+            <!-- Left Panel - Board Generation & Filters -->
+            <div class="panel">
+                <h2>Board Generation</h2>
+                <div class="filter-section">
+                    <h3>Board Size</h3>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <input type="range" id="boardSizeSlider" min="1" max="100" value="32" style="flex: 1;"
+                            oninput="updateBoardSize(this.value)">
+                        <input type="number" id="boardSize" min="1" max="100" value="32"
+                            style="width: 60px; padding: 8px;" oninput="updateBoardSizeSlider(this.value)">
+                        <span style="font-size: 0.9rem; color: #e0e0e0;"></span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Type Options</h3>
+                    <div class="option-buttons">
+                        <div class="option-button inactive" id="singleTypeBtn" onclick="toggleSingleType()">Single Type
+                        </div>
+                        <div class="option-button inactive" id="dualTypeBtn" onclick="toggleDualType()">Dual Type</div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Type Filters</h3>
+                    <button onclick="toggleAllGenTypes()" style="margin-bottom: 10px; background: #555;">Toggle
+                        All</button>
+                    <div class="filter-grid" id="genTypeGrid"></div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Generation Filter</h3>
+                    <button onclick="toggleAllGenGenerations()" style="margin-bottom: 10px; background: #555;">Toggle
+                        All</button>
+                    <div class="gen-filter-grid" id="genGenGrid"></div>
+                </div>
+
+                <button onclick="generateBoard()">Generate Board & Code</button>
+                <div id="codeDisplay"></div>
+
+                <div style="margin-top: 20px;">
+                    <h2>Load Board</h2>
+                    <input type="text" id="codeInput" placeholder="Paste opponent's code here...">
+                    <button onclick="loadBoard()" style="margin-top: 10px;">Load Game Board</button>
+                </div>
+            </div>
+
+            <!-- Center - Game Board -->
+            <div class="board-container">
+                <h2>Pokemon Guess Who</h2>
+                <div id="gameBoard">
+                    <div class="loading">Generate or load a game board to start playing!</div>
+                </div>
+                <div id="boardStats" style="display: none;"></div>
+            </div>
+
+            <!-- Right Panel - Board Filters -->
+            <div class="panel">
+                <h2>Filter Current Board</h2>
+
+                <div class="filter-section">
+                    <h3>Type Filter</h3>
+                    <div class="filter-grid" id="typeGrid"></div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Generation Filter</h3>
+                    <div class="gen-filter-grid" id="genGrid"></div>
+                </div>
+
+                <button onclick="selectAllFilters()">Select All</button>
+                <button onclick="clearAllEliminations()" style="margin-top: 10px; background: #555;">Reset
+                    Eliminations</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allPokemon = [];
+        let currentBoard = [];
+        let eliminatedPokemon = new Set();
+        let manuallyEliminated = new Set();
+        let selectedMyPokemon = null;
+        let filteredBoard = [];
+        let pokemonDetails = {};
+        let activeTypes = new Set();
+        let activeGens = new Set();
+        let genSelectedTypes = new Set();
+        let genSelectedGens = new Set();
+        let singleTypeOnly = false;
+        let dualTypeOnly = false;
+
+        const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+
+        const typeColors = {
+            normal: '#A8A77A',
+            fire: '#EE8130',
+            water: '#6390F0',
+            electric: '#F7D02C',
+            grass: '#7AC74C',
+            ice: '#96D9D6',
+            fighting: '#C22E28',
+            poison: '#A33EA1',
+            ground: '#E2BF65',
+            flying: '#A98FF3',
+            psychic: '#F95587',
+            bug: '#A6B91A',
+            rock: '#B6A136',
+            ghost: '#735797',
+            dragon: '#6F35FC',
+            dark: '#705746',
+            steel: '#B7B7CE',
+            fairy: '#D685AD'
+        };
+
+        const genRanges = {
+            1: [1, 151],
+            2: [152, 251],
+            3: [252, 386],
+            4: [387, 493],
+            5: [494, 649],
+            6: [650, 721],
+            7: [722, 809],
+            8: [810, 898]
+        };
+
+        function getGeneration(id) {
+            for (let gen in genRanges) {
+                if (id >= genRanges[gen][0] && id <= genRanges[gen][1]) {
+                    return parseInt(gen);
+                }
+            }
+            return 1;
+        }
+
+        async function loadPokemonList() {
+            try {
+                const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=898');
+                const data = await response.json();
+                allPokemon = data.results.map(function (p, idx) {
+                    return {
+                        id: idx + 1,
+                        name: p.name
+                    };
+                });
+                populateTypeFilters();
+            } catch (error) {
+                console.error('Error loading Pokemon:', error);
+            }
+        }
+        function updateBoardSize(value) {
+    document.getElementById('boardSize').value = value;
+}
+
+function updateBoardSizeSlider(value) {
+    document.getElementById('boardSizeSlider').value = value;
+}
+
+        function populateTypeFilters() {
+            const types = Object.keys(typeColors);
+            const typeGrid = document.getElementById('typeGrid');
+            const genTypeGrid = document.getElementById('genTypeGrid');
+
+            types.forEach(type => {
+                // For board generation type filter (left panel)
+                genSelectedTypes.add(type);
+                const genTypeBtn = document.createElement('div');
+                genTypeBtn.className = 'filter-button';
+                genTypeBtn.style.background = typeColors[type];
+                genTypeBtn.textContent = type;
+                genTypeBtn.id = `gen-type-${type}`;
+                genTypeBtn.onclick = function () {
+                    if (genSelectedTypes.has(type)) {
+                        genSelectedTypes.delete(type);
+                        this.classList.add('inactive');
+                    } else {
+                        genSelectedTypes.add(type);
+                        this.classList.remove('inactive');
+                    }
+                };
+                genTypeGrid.appendChild(genTypeBtn);
+
+                
+
+                // For board filter (right panel)
+                activeTypes.add(type);
+                const typeBtn = document.createElement('div');
+                typeBtn.className = 'filter-button';
+                typeBtn.style.background = typeColors[type];
+                typeBtn.textContent = type;
+                typeBtn.id = `type-${type}`;
+                typeBtn.onclick = function () {
+                    if (activeTypes.has(type)) {
+                        activeTypes.delete(type);
+                        this.classList.add('inactive');
+                    } else {
+                        activeTypes.add(type);
+                        this.classList.remove('inactive');
+                    }
+                    applyFilterEliminations();
+                };
+                typeGrid.appendChild(typeBtn);
+            });
+
+            const genGrid = document.getElementById('genGrid');
+            const genGenGrid = document.getElementById('genGenGrid');
+
+            for (let i = 1; i <= 8; i++) {
+                // For board generation gen filter (left panel)
+                genSelectedGens.add(i);
+                const genGenBtn = document.createElement('div');
+                genGenBtn.className = 'gen-button';
+                genGenBtn.textContent = romanNumerals[i - 1];
+                genGenBtn.id = `gen-gen-${i}`;
+                genGenBtn.onclick = function () {
+                    if (genSelectedGens.has(i)) {
+                        genSelectedGens.delete(i);
+                        this.classList.add('inactive');
+                    } else {
+                        genSelectedGens.add(i);
+                        this.classList.remove('inactive');
+                    }
+                };
+                genGenGrid.appendChild(genGenBtn);
+
+                // For board filter (right panel)
+                activeGens.add(i);
+                const genBtn = document.createElement('div');
+                genBtn.className = 'gen-button';
+                genBtn.textContent = romanNumerals[i - 1];
+                genBtn.id = `gen-${i}`;
+                genBtn.onclick = function () {
+                    if (activeGens.has(i)) {
+                        activeGens.delete(i);
+                        this.classList.add('inactive');
+                    } else {
+                        activeGens.add(i);
+                        this.classList.remove('inactive');
+                    }
+                    applyFilterEliminations();
+                };
+                genGrid.appendChild(genBtn);
+            }
+        }
+
+        function toggleSingleType() {
+            singleTypeOnly = !singleTypeOnly;
+            const btn = document.getElementById('singleTypeBtn');
+            if (singleTypeOnly) {
+                btn.classList.remove('inactive');
+                dualTypeOnly = false;
+                document.getElementById('dualTypeBtn').classList.add('inactive');
+            } else {
+                btn.classList.add('inactive');
+            }
+        }
+
+        function toggleDualType() {
+            dualTypeOnly = !dualTypeOnly;
+            const btn = document.getElementById('dualTypeBtn');
+            if (dualTypeOnly) {
+                btn.classList.remove('inactive');
+                singleTypeOnly = false;
+                document.getElementById('singleTypeBtn').classList.add('inactive');
+            } else {
+                btn.classList.add('inactive');
+            }
+        }
+
+        function toggleAllGenTypes() {
+            const types = Object.keys(typeColors);
+            const allSelected = types.every(type => genSelectedTypes.has(type));
+
+            types.forEach(type => {
+                const btn = document.getElementById(`gen-type-${type}`);
+                if (allSelected) {
+                    genSelectedTypes.delete(type);
+                    btn.classList.add('inactive');
+                } else {
+                    genSelectedTypes.add(type);
+                    btn.classList.remove('inactive');
+                }
+            });
+        }
+
+        function toggleAllGenGenerations() {
+            const allSelected = [1, 2, 3, 4, 5, 6, 7, 8].every(i => genSelectedGens.has(i));
+
+            for (let i = 1; i <= 8; i++) {
+                const btn = document.getElementById(`gen-gen-${i}`);
+                if (allSelected) {
+                    genSelectedGens.delete(i);
+                    btn.classList.add('inactive');
+                } else {
+                    genSelectedGens.add(i);
+                    btn.classList.remove('inactive');
+                }
+            }
+        }
+
+        async function generateBoard() {
+            const boardSize = parseInt(document.getElementById('boardSize').value);
+
+            if (boardSize < 1 || boardSize > 100) {
+                alert('Board size must be between 1 and 100!');
+                return;
+            }
+
+            if (genSelectedTypes.size === 0) {
+                alert('Please select at least one type!');
+                return;
+            }
+
+            if (genSelectedGens.size === 0) {
+                alert('Please select at least one generation!');
+                return;
+            }
+
+            let validPokemon = [...allPokemon];
+
+            validPokemon = validPokemon.filter(p => {
+                const gen = getGeneration(p.id);
+                return genSelectedGens.has(gen);
+            });
+
+            if (validPokemon.length < boardSize) {
+                alert(`Not enough Pokemon match your filters! Only ${validPokemon.length} available. Please adjust your filters.`);
+                return;
+            }
+
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '<div class="loading">Generating board...</div>';
+
+            let selectedIds = new Set();
+            let attempts = 0;
+            const maxAttempts = validPokemon.length * 10;
+
+            while (selectedIds.size < boardSize && attempts < maxAttempts) {
+                attempts++;
+                const randomPokemon = validPokemon[Math.floor(Math.random() * validPokemon.length)];
+
+                try {
+                    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemon.id}`);
+                    const data = await response.json();
+
+                    const types = data.types.map(t => t.type.name);
+                    const typeCount = types.length;
+
+                    let passesFilter = true;
+
+                    if (singleTypeOnly && typeCount !== 1) passesFilter = false;
+                    if (dualTypeOnly && typeCount !== 2) passesFilter = false;
+
+                    const allTypesAreSelected = types.every(t => genSelectedTypes.has(t));
+                    if (!allTypesAreSelected) passesFilter = false;
+
+                    if (passesFilter) {
+                        selectedIds.add(randomPokemon.id);
+                    }
+                } catch (error) {
+                    console.error('Error fetching Pokemon:', error);
+                }
+            }
+
+            if (selectedIds.size < boardSize) {
+                alert(`Could not generate ${boardSize} Pokemon with these filters. Try less restrictive filters.`);
+                gameBoard.innerHTML = '<div class="loading">Generate or load a game board to start playing!</div>';
+                return;
+            }
+
+            const boardArray = Array.from(selectedIds);
+            const encoded = btoa(boardArray.join(','));
+
+            document.getElementById('codeDisplay').innerHTML =
+                '<div class="code-display">' +
+                '<code>' + encoded + '</code>' +
+                '<button class="copy-btn" onclick="copyCode(\'' + encoded + '\', this)">Copy</button>' +
+                '</div>';
+
+            document.getElementById('codeInput').value = encoded;
+            await loadBoard();
+        }
+
+        function copyCode(code, btn) {
+            navigator.clipboard.writeText(code).then(function () {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(function () {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        async function loadBoard() {
+            const codeInput = document.getElementById('codeInput');
+            const code = codeInput.value.trim();
+            if (!code) return;
+            try {
+                const decoded = atob(code);
+                const pokemonIds = decoded.split(',').map(Number);
+                const gameBoard = document.getElementById('gameBoard');
+                gameBoard.innerHTML = '<div class="loading">Loading Pokemon...</div>';
+
+                pokemonDetails = {};
+                const pokemonData = await Promise.all(
+                    pokemonIds.map(async (id) => {
+                        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+                        const data = await response.json();
+                        const pokemon = {
+                            id: data.id,
+                            name: data.name,
+                            sprite: data.sprites.other['official-artwork'].front_default || data.sprites.front_default,
+                            types: data.types.map(t => t.type.name),
+                            generation: getGeneration(data.id),
+                            stats: {
+                                hp: data.stats[0].base_stat,
+                                attack: data.stats[1].base_stat,
+                                defense: data.stats[2].base_stat,
+                                spAttack: data.stats[3].base_stat,
+                                spDefense: data.stats[4].base_stat,
+                                speed: data.stats[5].base_stat
+                            }
+                        };
+                        pokemonDetails[id] = pokemon;
+                        return pokemon;
+                    })
+                );
+                currentBoard = pokemonData;
+                filteredBoard = [...currentBoard];
+                eliminatedPokemon = new Set();
+                manuallyEliminated = new Set();
+                selectedMyPokemon = null;
+
+                activeTypes = new Set(Object.keys(typeColors));
+                activeGens = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+                Object.keys(typeColors).forEach(type => {
+                    const btn = document.getElementById(`type-${type}`);
+                    if (btn) btn.classList.remove('inactive');
+                });
+                for (let i = 1; i <= 8; i++) {
+                    const btn = document.getElementById(`gen-${i}`);
+                    if (btn) btn.classList.remove('inactive');
+                }
+
+                renderBoard();
+            } catch (error) {
+                console.error('Error loading board:', error);
+                alert('Invalid code! Please check and try again.');
+            }
+        }
+
+        function applyFilterEliminations() {
+            eliminatedPokemon = new Set(manuallyEliminated);
+
+            currentBoard.forEach(p => {
+                if (p.id === selectedMyPokemon) {
+                    return;
+                }
+
+                const allTypesActive = p.types.every(t => activeTypes.has(t));
+                const hasActiveGen = activeGens.has(p.generation);
+
+                if (!allTypesActive || !hasActiveGen) {
+                    eliminatedPokemon.add(p.id);
+                }
+            });
+
+            renderBoard();
+        }
+
+        function selectAllFilters() {
+            Object.keys(typeColors).forEach(type => {
+                activeTypes.add(type);
+                const btn = document.getElementById(`type-${type}`);
+                if (btn) btn.classList.remove('inactive');
+            });
+
+            for (let i = 1; i <= 8; i++) {
+                activeGens.add(i);
+                const btn = document.getElementById(`gen-${i}`);
+                if (btn) btn.classList.remove('inactive');
+            }
+
+            applyFilterEliminations();
+        }
+
+        function clearAllEliminations() {
+            eliminatedPokemon = new Set();
+            manuallyEliminated = new Set();
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            const boardStats = document.getElementById('boardStats');
+            gameBoard.innerHTML = `
+                <div class="pokemon-grid">
+                    ${currentBoard.map(p => `
+                        <div class="pokemon-card ${eliminatedPokemon.has(p.id) ? 'eliminated' : ''} ${selectedMyPokemon === p.id ? 'selected' : ''}" 
+                             onclick="toggleEliminate(${p.id}, event)"
+                             oncontextmenu="selectMyPokemon(${p.id}, event)"
+                             onmouseenter="showTooltip(event, ${p.id})"
+                             onmouseleave="hideTooltip()">
+                            <img src="${p.sprite}" alt="${p.name}">
+                            <p>${p.name}</p>
+                            <div class="type-boxes">
+                                ${p.types.map(t => `<span class="type-box" style="background:${typeColors[t] || 'black'}">${t}</span>`).join('')}
+                            </div>
+                            ${eliminatedPokemon.has(p.id) ? '<div class="eliminated-x">✕</div>' : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            const remaining = currentBoard.filter(p => !eliminatedPokemon.has(p.id)).length;
+            boardStats.style.display = 'block';
+            boardStats.innerHTML = `
+                <div class="board-stats">
+                    <p>Left-click to eliminate • Right-click to select your Pokemon</p>
+                    <p><strong>Remaining: ${remaining} / ${currentBoard.length}</strong></p>
+                    ${selectedMyPokemon ? `<p style="color: #e63946;">Your Pokemon: <strong>${pokemonDetails[selectedMyPokemon].name}</strong></p>` : ''}
+                </div>
+            `;
+        }
+
+        function toggleEliminate(pokemonId, event) {
+            if (event.button === 2) return;
+
+            if (manuallyEliminated.has(pokemonId)) {
+                manuallyEliminated.delete(pokemonId);
+            } else {
+                manuallyEliminated.add(pokemonId);
+            }
+
+            applyFilterEliminations();
+        }
+
+        function selectMyPokemon(pokemonId, event) {
+            event.preventDefault();
+            if (selectedMyPokemon === pokemonId) {
+                selectedMyPokemon = null;
+            } else {
+                selectedMyPokemon = pokemonId;
+            }
+            renderBoard();
+        }
+
+        let tooltip = null;
+
+        function showTooltip(event, pokemonId) {
+            const pokemon = pokemonDetails[pokemonId];
+            if (!pokemon) return;
+
+            hideTooltip();
+
+            tooltip = document.createElement('div');
+            tooltip.className = 'pokemon-tooltip';
+            tooltip.innerHTML = `
+                <div class="gen-label">Generation ${romanNumerals[pokemon.generation - 1]}</div>
+                <img src="${pokemon.sprite}" alt="${pokemon.name}">
+                <h4>${pokemon.name}</h4>
+            `;
+
+            document.body.appendChild(tooltip);
+
+            const rect = event.target.closest('.pokemon-card').getBoundingClientRect();
+            tooltip.style.left = (rect.right + 15) + 'px';
+            tooltip.style.top = rect.top + 'px';
+
+            const tooltipRect = tooltip.getBoundingClientRect();
+            if (tooltipRect.right > window.innerWidth) {
+                tooltip.style.left = (rect.left - tooltipRect.width - 15) + 'px';
+            }
+            if (tooltipRect.bottom > window.innerHeight) {
+                tooltip.style.top = (window.innerHeight - tooltipRect.height - 10) + 'px';
+            }
+        }
+
+        function hideTooltip() {
+            if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+            }
+        }
+
+        loadPokemonList();
+    </script>
+</body>
+
+</html>
